@@ -58,24 +58,30 @@ def extract_audio(src: Path, dst_wav: Path) -> None:
     ])
 
 
-RATIO_FILTERS = {
-    # name -> (target_w, target_h) aspect used to crop-then-pad
-    1: (9, 16),   # 9:16 vertical (default, TikTok/Reels/Shorts)
-    2: (1, 1),    # square
-    3: (4, 5),    # portrait
-    4: (16, 9),   # original landscape
+# ratio id -> (output_w, output_h) in pixels.
+RATIO_TARGETS = {
+    1: (1080, 1920),  # 9:16 vertical (default, TikTok/Reels/Shorts)
+    2: (1080, 1080),  # square
+    3: (1080, 1350),  # 4:5 portrait
+    4: (1920, 1080),  # original landscape
 }
 
 
-def _scale_crop_filter(ratio_w: int, ratio_h: int) -> str:
-    # Scale to cover the target aspect ratio, then center-crop to it exactly.
-    if (ratio_w, ratio_h) == (9, 16):
-        return "scale=-2:1920,crop=1080:1920"
-    if (ratio_w, ratio_h) == (1, 1):
-        return "scale=1080:-2,crop=1080:1080"
-    if (ratio_w, ratio_h) == (4, 5):
-        return "scale=1080:-2,crop=1080:1350"
-    return "scale=1920:-2,crop=1920:1080"
+def cover_scale_dims(src_w: int, src_h: int, target_w: int, target_h: int) -> tuple[int, int]:
+    """Dimensions to scale (src_w, src_h) to so it fully covers (target_w, target_h),
+    preserving aspect ratio (i.e. the smallest enclosing scale, like CSS `background-size:cover`).
+    """
+    scale = max(target_w / src_w, target_h / src_h)
+    scaled_w = max(target_w, int(round(src_w * scale / 2)) * 2)
+    scaled_h = max(target_h, int(round(src_h * scale / 2)) * 2)
+    return scaled_w, scaled_h
+
+
+def _scale_crop_filter(src_w: int, src_h: int, target_w: int, target_h: int, pan_x_expr: str | None) -> str:
+    scaled_w, scaled_h = cover_scale_dims(src_w, src_h, target_w, target_h)
+    x_expr = pan_x_expr if pan_x_expr else str((scaled_w - target_w) // 2)
+    y_expr = str((scaled_h - target_h) // 2)
+    return f"scale={scaled_w}:{scaled_h},crop={target_w}:{target_h}:x='{x_expr}':y='{y_expr}'"
 
 
 def cut_clip(
@@ -86,12 +92,20 @@ def cut_clip(
     ratio: int = 1,
     subtitle_ass: Path | None = None,
     remove_silence: bool = False,
+    pan_x_expr: str | None = None,
 ) -> None:
-    """Cut [start, end] from src, optionally reframe to a target ratio and burn subtitles."""
+    """Cut [start, end] from src, optionally reframe to a target ratio and burn subtitles.
+
+    `pan_x_expr`, if given, is an ffmpeg time expression (referencing `t`) for the
+    crop window's x offset in the *scaled* coordinate space, used to pan the frame
+    to follow a detected subject instead of a fixed center crop.
+    """
     dst.parent.mkdir(parents=True, exist_ok=True)
     duration = max(0.1, end - start)
 
-    vf_parts = [_scale_crop_filter(*RATIO_FILTERS.get(ratio, RATIO_FILTERS[1]))]
+    target_w, target_h = RATIO_TARGETS.get(ratio, RATIO_TARGETS[1])
+    src_w, src_h = get_video_dimensions(src)
+    vf_parts = [_scale_crop_filter(src_w, src_h, target_w, target_h, pan_x_expr)]
     if subtitle_ass is not None:
         filename = _escape_filter_arg(subtitle_ass)
         fontsdir = _escape_filter_arg(FONTS_DIR)

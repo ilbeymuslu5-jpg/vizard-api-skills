@@ -7,7 +7,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from . import ffmpeg_utils, subtitles
+from . import ffmpeg_utils, reframe, subtitles
 from .downloader import DownloadError, fetch_source_video
 from .scoring import ScoredClip, select_top_clips
 from .schemas import ProjectCreateRequest
@@ -145,12 +145,20 @@ def _render_clip(pdir: Path, video_id: str, source: Path, clip: ScoredClip, req:
         font=req.captionFont,
     )
 
+    pan_x_expr = None
+    if req.smartReframeSwitch:
+        try:
+            pan_x_expr = reframe.compute_pan_expr(source, clip.start, clip.end, req.ratioOfClip)
+        except Exception:
+            pan_x_expr = None  # face detection is a nice-to-have; fall back to a static center crop
+
     out_path = clips_dir / f"{video_id}.mp4"
     ffmpeg_utils.cut_clip(
         source, out_path, clip.start, clip.end,
         ratio=req.ratioOfClip,
         subtitle_ass=ass_path,
         remove_silence=bool(req.removeSilenceSwitch),
+        pan_x_expr=pan_x_expr,
     )
 
     thumb_path = thumbs_dir / f"{video_id}.jpg"

@@ -58,6 +58,7 @@ form.addEventListener("submit", async (e) => {
   fd.append("highlightSwitch", document.getElementById("highlight").checked ? "1" : "0");
   fd.append("removeSilenceSwitch", document.getElementById("remove-silence").checked ? "1" : "0");
   fd.append("captionFont", document.getElementById("caption-font").value);
+  fd.append("smartReframeSwitch", document.getElementById("smart-reframe").checked ? "1" : "0");
 
   try {
     const resp = await fetch(`${API}/create`, { method: "POST", body: fd });

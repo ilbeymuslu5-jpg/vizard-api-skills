@@ -30,6 +30,14 @@ instead.
   Black) via `captionFont`. Fonts are bundled in `backend/assets/fonts` and
   loaded straight from disk by ffmpeg, so the look is identical on every OS
   regardless of what's installed system-wide.
+- **Smart reframe** (`smartReframeSwitch`, on by default): when cropping a
+  landscape source down to a vertical/square ratio, a local OpenCV
+  face-detector samples the clip, tracks the largest face's horizontal
+  position over time, and pans the crop to follow it instead of using a
+  fixed center crop — see `backend/app/reframe.py`. Falls back to a static
+  center crop if no face is found. This is a local approximation of
+  Vizard's "auto reframe" — not per-word active-speaker detection, just
+  face tracking.
 - **Generates a social caption + hashtags** per clip, again with a local
   heuristic instead of a cloud LLM call.
 

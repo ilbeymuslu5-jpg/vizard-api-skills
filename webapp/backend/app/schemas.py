@@ -24,6 +24,7 @@ class ProjectCreateRequest(BaseModel):
     highlightSwitch: int = 1
     removeSilenceSwitch: int = 0
     captionFont: str = "classic"
+    smartReframeSwitch: int = 1
 
 
 class ClipOut(BaseModel):

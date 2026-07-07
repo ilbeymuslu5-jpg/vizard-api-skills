@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -68,7 +69,9 @@ async def create_project(
     uploaded_path = None
     if file is not None:
         suffix = Path(file.filename or "upload.mp4").suffix or ".mp4"
-        tmp = Path(tempfile.mkstemp(suffix=suffix)[1])
+        fd, tmp_name = tempfile.mkstemp(suffix=suffix)
+        os.close(fd)  # avoid holding a second open handle (locks the file on Windows)
+        tmp = Path(tmp_name)
         with tmp.open("wb") as f:
             shutil.copyfileobj(file.file, f)
         uploaded_path = tmp

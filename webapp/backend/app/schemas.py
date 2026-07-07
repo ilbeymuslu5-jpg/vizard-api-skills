@@ -20,8 +20,8 @@ class ProjectCreateRequest(BaseModel):
     # Editing/rendering options (apply to every produced clip)
     ratioOfClip: int = 1
     subtitleSwitch: int = 1
-    headlineSwitch: int = 1
-    highlightSwitch: int = 0
+    headlineSwitch: int = 0
+    highlightSwitch: int = 1
     removeSilenceSwitch: int = 0
     captionFont: str = "classic"
 

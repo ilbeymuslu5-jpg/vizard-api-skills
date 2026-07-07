@@ -44,8 +44,8 @@ async def create_project(
     maxClipCount: int = Form(8),
     ratioOfClip: int = Form(1),
     subtitleSwitch: int = Form(1),
-    headlineSwitch: int = Form(1),
-    highlightSwitch: int = Form(0),
+    headlineSwitch: int = Form(0),
+    highlightSwitch: int = Form(1),
     removeSilenceSwitch: int = Form(0),
     captionFont: str = Form("classic"),
 ):

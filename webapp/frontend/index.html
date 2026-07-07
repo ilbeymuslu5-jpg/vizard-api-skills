@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vizard Local — AI Clipping Studio</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">🎬 Vizard <span>Local</span></div>
+  <div class="tagline">Self-hosted AI video clipping — runs entirely on this machine</div>
+</header>
+
+<main>
+  <section class="panel" id="submit-panel">
+    <h2>1. Submit a video</h2>
+    <div class="source-toggle">
+      <button type="button" class="tab active" data-tab="upload">Upload file</button>
+      <button type="button" class="tab" data-tab="url">Video URL</button>
+    </div>
+
+    <form id="project-form">
+      <div class="tab-content" data-tab-content="upload">
+        <input type="file" id="file-input" accept="video/*">
+      </div>
+      <div class="tab-content hidden" data-tab-content="url">
+        <input type="text" id="url-input" placeholder="https://www.youtube.com/watch?v=... or direct .mp4 link">
+        <select id="video-type">
+          <option value="2">YouTube</option>
+          <option value="4">Vimeo</option>
+          <option value="1">Direct file URL</option>
+        </select>
+      </div>
+
+      <div class="options-grid">
+        <label>Language
+          <select id="lang">
+            <option value="auto">Auto-detect</option>
+            <option value="en">English</option>
+            <option value="tr">Türkçe</option>
+            <option value="es">Español</option>
+            <option value="de">Deutsch</option>
+            <option value="fr">Français</option>
+          </select>
+        </label>
+        <label>Clip length
+          <select id="prefer-length">
+            <option value="0">Auto</option>
+            <option value="1">&lt; 30s</option>
+            <option value="2">30–60s</option>
+            <option value="3">60–90s</option>
+            <option value="4">&gt; 90s</option>
+          </select>
+        </label>
+        <label>Output ratio
+          <select id="ratio">
+            <option value="1">9:16 (Shorts/Reels/TikTok)</option>
+            <option value="2">1:1 (Square)</option>
+            <option value="3">4:5 (Portrait)</option>
+            <option value="4">16:9 (Original)</option>
+          </select>
+        </label>
+        <label>Max clips
+          <input type="number" id="max-clips" value="6" min="1" max="12">
+        </label>
+      </div>
+
+      <div class="toggles">
+        <label><input type="checkbox" id="subtitles" checked> Burn-in subtitles</label>
+        <label><input type="checkbox" id="headline" checked> Headline hook overlay</label>
+        <label><input type="checkbox" id="highlight"> Word-by-word highlight</label>
+        <label><input type="checkbox" id="remove-silence"> Remove silence</label>
+      </div>
+
+      <button type="submit" id="submit-btn">Generate clips</button>
+    </form>
+  </section>
+
+  <section class="panel hidden" id="progress-panel">
+    <h2>2. Processing</h2>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="progress-label" id="progress-label">Queued...</div>
+  </section>
+
+  <section class="panel hidden" id="results-panel">
+    <h2>3. Your clips</h2>
+    <div class="clip-grid" id="clip-grid"></div>
+  </section>
+</main>
+
+<div class="modal hidden" id="caption-modal">
+  <div class="modal-box">
+    <button class="modal-close" id="caption-close">&times;</button>
+    <h3>AI Social Caption</h3>
+    <div class="caption-controls">
+      <select id="caption-platform">
+        <option value="2">TikTok</option>
+        <option value="3">Instagram</option>
+        <option value="4">YouTube</option>
+        <option value="6">LinkedIn</option>
+        <option value="7">Twitter/X</option>
+        <option value="1">General</option>
+      </select>
+      <select id="caption-tone">
+        <option value="2">Catchy</option>
+        <option value="1">Interesting</option>
+        <option value="0">Neutral</option>
+        <option value="3">Serious</option>
+        <option value="4">Question</option>
+      </select>
+      <button id="caption-generate">Generate</button>
+    </div>
+    <textarea id="caption-output" rows="8" readonly placeholder="Generated caption will appear here..."></textarea>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

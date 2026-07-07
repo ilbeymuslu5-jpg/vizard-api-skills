@@ -1,0 +1,118 @@
+"""Thin wrappers around the ffmpeg/ffprobe CLI used by the clipping pipeline."""
+from __future__ import annotations
+
+import json
+import subprocess
+from pathlib import Path
+
+
+class FFmpegError(RuntimeError):
+    pass
+
+
+def _run(cmd: list[str]) -> subprocess.CompletedProcess:
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if proc.returncode != 0:
+        raise FFmpegError(f"Command failed ({' '.join(cmd)}):\n{proc.stderr[-4000:]}")
+    return proc
+
+
+def probe(path: Path) -> dict:
+    proc = _run([
+        "ffprobe", "-v", "quiet", "-print_format", "json",
+        "-show_format", "-show_streams", str(path),
+    ])
+    return json.loads(proc.stdout)
+
+
+def get_duration_seconds(path: Path) -> float:
+    info = probe(path)
+    return float(info["format"]["duration"])
+
+
+def get_video_dimensions(path: Path) -> tuple[int, int]:
+    info = probe(path)
+    for stream in info["streams"]:
+        if stream.get("codec_type") == "video":
+            return int(stream["width"]), int(stream["height"])
+    raise FFmpegError(f"No video stream found in {path}")
+
+
+def extract_audio(src: Path, dst_wav: Path) -> None:
+    dst_wav.parent.mkdir(parents=True, exist_ok=True)
+    _run([
+        "ffmpeg", "-y", "-i", str(src),
+        "-vn", "-ac", "1", "-ar", "16000", "-f", "wav",
+        str(dst_wav),
+    ])
+
+
+RATIO_FILTERS = {
+    # name -> (target_w, target_h) aspect used to crop-then-pad
+    1: (9, 16),   # 9:16 vertical (default, TikTok/Reels/Shorts)
+    2: (1, 1),    # square
+    3: (4, 5),    # portrait
+    4: (16, 9),   # original landscape
+}
+
+
+def _scale_crop_filter(ratio_w: int, ratio_h: int) -> str:
+    # Scale to cover the target aspect ratio, then center-crop to it exactly.
+    if (ratio_w, ratio_h) == (9, 16):
+        return "scale=-2:1920,crop=1080:1920"
+    if (ratio_w, ratio_h) == (1, 1):
+        return "scale=1080:-2,crop=1080:1080"
+    if (ratio_w, ratio_h) == (4, 5):
+        return "scale=1080:-2,crop=1080:1350"
+    return "scale=1920:-2,crop=1920:1080"
+
+
+def cut_clip(
+    src: Path,
+    dst: Path,
+    start: float,
+    end: float,
+    ratio: int = 1,
+    subtitle_ass: Path | None = None,
+    remove_silence: bool = False,
+) -> None:
+    """Cut [start, end] from src, optionally reframe to a target ratio and burn subtitles."""
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    duration = max(0.1, end - start)
+
+    vf_parts = [_scale_crop_filter(*RATIO_FILTERS.get(ratio, RATIO_FILTERS[1]))]
+    if subtitle_ass is not None:
+        escaped = str(subtitle_ass).replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
+        vf_parts.append(f"ass='{escaped}'")
+    vf = ",".join(vf_parts)
+
+    af_parts = []
+    if remove_silence:
+        af_parts.append(
+            "silenceremove=start_periods=1:start_threshold=-35dB:start_silence=0.3:"
+            "stop_periods=-1:stop_threshold=-35dB:stop_silence=0.3:stop_duration=0.5"
+        )
+    af = ",".join(af_parts) if af_parts else None
+
+    cmd = [
+        "ffmpeg", "-y",
+        "-ss", f"{start:.3f}", "-i", str(src), "-t", f"{duration:.3f}",
+        "-vf", vf,
+    ]
+    if af:
+        cmd += ["-af", af]
+    cmd += [
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "21",
+        "-c:a", "aac", "-b:a", "128k",
+        "-movflags", "+faststart",
+        str(dst),
+    ]
+    _run(cmd)
+
+
+def make_thumbnail(src: Path, dst_jpg: Path, at_seconds: float = 0.0) -> None:
+    dst_jpg.parent.mkdir(parents=True, exist_ok=True)
+    _run([
+        "ffmpeg", "-y", "-ss", f"{at_seconds:.3f}", "-i", str(src),
+        "-frames:v", "1", "-q:v", "3", str(dst_jpg),
+    ])

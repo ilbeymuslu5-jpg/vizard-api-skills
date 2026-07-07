@@ -1,0 +1,172 @@
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --border: #262b36;
+  --text: #e8eaed;
+  --muted: #8b93a3;
+  --accent: #ff5470;
+  --accent2: #ffd23f;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.topbar {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand { font-size: 24px; font-weight: 700; }
+.brand span { color: var(--accent); }
+.tagline { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.panel h2 { margin-top: 0; }
+
+.hidden { display: none !important; }
+
+.source-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+.tab {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+input[type="text"], input[type="file"], input[type="number"], select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #0c0e13;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+.options-grid label { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+
+.toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 20px;
+  font-size: 14px;
+}
+.toggles label { display: flex; align-items: center; gap: 6px; }
+
+button#submit-btn, #caption-generate {
+  margin-top: 24px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), #ff8a5b);
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+button#submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.progress-bar {
+  height: 10px;
+  background: #0c0e13;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width 0.4s ease;
+}
+.progress-label { margin-top: 10px; color: var(--muted); font-size: 14px; }
+
+.clip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.clip-card {
+  background: #0c0e13;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.clip-card video { width: 100%; aspect-ratio: 9/16; background: black; object-fit: contain; }
+.clip-card .clip-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.clip-title { font-weight: 600; font-size: 14px; line-height: 1.3; }
+.clip-score {
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(255, 210, 63, 0.15);
+  color: var(--accent2);
+}
+.clip-reason { font-size: 12px; color: var(--muted); }
+.clip-actions { display: flex; gap: 8px; margin-top: auto; }
+.clip-actions a, .clip-actions button {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+}
+.clip-actions a:hover, .clip-actions button:hover { border-color: var(--accent); }
+
+.modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center; z-index: 10;
+}
+.modal-box {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+  padding: 24px; width: 90%; max-width: 480px; position: relative;
+}
+.modal-close {
+  position: absolute; top: 12px; right: 16px; background: none; border: none;
+  color: var(--muted); font-size: 22px; cursor: pointer;
+}
+.caption-controls { display: flex; gap: 8px; margin-bottom: 12px; }
+.caption-controls select { flex: 1; }
+.caption-controls button { padding: 10px 16px; border-radius: 8px; border: none; background: var(--accent); color: white; cursor: pointer; }
+#caption-output { width: 100%; background: #0c0e13; color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 14px; }

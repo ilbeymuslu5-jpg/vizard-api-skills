@@ -23,6 +23,7 @@ class ProjectCreateRequest(BaseModel):
     headlineSwitch: int = 1
     highlightSwitch: int = 0
     removeSilenceSwitch: int = 0
+    captionFont: str = "classic"
 
 
 class ClipOut(BaseModel):

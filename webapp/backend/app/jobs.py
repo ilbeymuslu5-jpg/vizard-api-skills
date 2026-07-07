@@ -142,6 +142,7 @@ def _render_clip(pdir: Path, video_id: str, source: Path, clip: ScoredClip, req:
         show_subtitles=bool(req.subtitleSwitch),
         headline=title if req.headlineSwitch else None,
         highlight_words=bool(req.highlightSwitch),
+        font=req.captionFont,
     )
 
     out_path = clips_dir / f"{video_id}.mp4"

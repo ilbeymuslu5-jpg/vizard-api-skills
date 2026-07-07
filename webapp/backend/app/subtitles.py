@@ -5,7 +5,17 @@ from pathlib import Path
 
 from .transcription import Sentence
 
-ASS_HEADER = """[Script Info]
+# Fonts are bundled in assets/fonts and loaded via ffmpeg's `fontsdir`, so the
+# rendered look is identical regardless of what's installed on the host OS.
+FONT_PRESETS: dict[str, dict] = {
+    "classic": {"label": "Classic", "family": "DejaVu Sans", "caption_size": 64, "headline_size": 54},
+    "beast": {"label": "MrBeast (Bold)", "family": "Montserrat ExtraBold", "caption_size": 70, "headline_size": 58},
+    "impact": {"label": "Impact", "family": "Bebas Neue", "caption_size": 76, "headline_size": 64},
+    "clean": {"label": "Clean", "family": "Roboto Black", "caption_size": 62, "headline_size": 52},
+}
+DEFAULT_FONT = "classic"
+
+ASS_HEADER_TEMPLATE = """[Script Info]
 ScriptType: v4.00+
 PlayResX: 1080
 PlayResY: 1920
@@ -14,12 +24,17 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Caption,DejaVu Sans,64,&H00FFFFFF,&H000000FF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,4,2,2,60,60,140,1
-Style: Headline,DejaVu Sans,54,&H00FDF200,&H000000FF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,4,2,8,60,60,90,1
+Style: Caption,{family},{caption_size},&H00FFFFFF,&H000000FF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,4,2,2,60,60,140,1
+Style: Headline,{family},{headline_size},&H00FDF200,&H000000FF,&H00101010,&H00000000,-1,0,0,0,100,100,0,0,1,4,2,8,60,60,90,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
+
+
+def _ass_header(font: str) -> str:
+    preset = FONT_PRESETS.get(font, FONT_PRESETS[DEFAULT_FONT])
+    return ASS_HEADER_TEMPLATE.format(**preset)
 
 
 def _ts(seconds: float) -> str:
@@ -66,6 +81,7 @@ def build_ass(
     show_subtitles: bool = True,
     headline: str | None = None,
     highlight_words: bool = False,
+    font: str = DEFAULT_FONT,
 ) -> None:
     """Write an .ass file with timestamps relative to the clip (clip_start = t0)."""
     dst_ass.parent.mkdir(parents=True, exist_ok=True)
@@ -91,7 +107,7 @@ def build_ass(
                 text = _wrap(_escape(sent.text))
             events.append(f"Dialogue: 0,{_ts(start)},{_ts(end)},Caption,,0,0,0,,{text}")
 
-    dst_ass.write_text(ASS_HEADER + "\n".join(events) + "\n", encoding="utf-8")
+    dst_ass.write_text(_ass_header(font) + "\n".join(events) + "\n", encoding="utf-8")
 
 
 def _build_karaoke_text(sent: Sentence, clip_start: float, clip_end: float, max_chars: int = 22) -> str:

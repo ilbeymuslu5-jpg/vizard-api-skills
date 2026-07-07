@@ -5,9 +5,20 @@ import json
 import subprocess
 from pathlib import Path
 
+FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+
 
 class FFmpegError(RuntimeError):
     pass
+
+
+def _escape_filter_arg(path: Path) -> str:
+    """Escape a filesystem path for use inside an ffmpeg filtergraph argument.
+
+    Windows paths (C:\\foo) contain both ':' and '\\', which the filtergraph
+    parser treats as special characters.
+    """
+    return str(path).replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
 
 
 def _run(cmd: list[str]) -> subprocess.CompletedProcess:
@@ -82,8 +93,9 @@ def cut_clip(
 
     vf_parts = [_scale_crop_filter(*RATIO_FILTERS.get(ratio, RATIO_FILTERS[1]))]
     if subtitle_ass is not None:
-        escaped = str(subtitle_ass).replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
-        vf_parts.append(f"ass='{escaped}'")
+        filename = _escape_filter_arg(subtitle_ass)
+        fontsdir = _escape_filter_arg(FONTS_DIR)
+        vf_parts.append(f"ass='{filename}':fontsdir='{fontsdir}'")
     vf = ",".join(vf_parts)
 
     af_parts = []

@@ -25,6 +25,11 @@ instead.
 - **Renders clips** with `ffmpeg`: crops/pads to 9:16, 1:1, 4:5 or keeps
   16:9, burns in styled subtitles (optionally word-by-word highlighted),
   overlays a headline hook, and can trim silence.
+- **Caption fonts**: pick from a few bundled styles (`classic` / DejaVu Sans,
+  `beast` / Montserrat ExtraBold, `impact` / Bebas Neue, `clean` / Roboto
+  Black) via `captionFont`. Fonts are bundled in `backend/assets/fonts` and
+  loaded straight from disk by ffmpeg, so the look is identical on every OS
+  regardless of what's installed system-wide.
 - **Generates a social caption + hashtags** per clip, again with a local
   heuristic instead of a cloud LLM call.
 
@@ -67,7 +72,8 @@ Same shape as the real Vizard API (see the repo root docs), served locally:
 
 - `POST /api/v1/project/create` — multipart form: `file` **or** `videoUrl`
   + `videoType`, plus `lang`, `preferLength`, `ratioOfClip`, `maxClipCount`,
-  `subtitleSwitch`, `headlineSwitch`, `highlightSwitch`, `removeSilenceSwitch`.
+  `subtitleSwitch`, `headlineSwitch`, `highlightSwitch`, `removeSilenceSwitch`,
+  `captionFont` (`classic` | `beast` | `impact` | `clean`).
 - `GET /api/v1/project/query/{projectId}` — poll status/progress; on
   completion, `videos[]` has the same fields Vizard returns
   (`videoId`, `videoUrl`, `title`, `transcript`, `viralScore`, `viralReason`, …).

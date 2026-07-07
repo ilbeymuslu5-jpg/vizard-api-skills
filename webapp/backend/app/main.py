@@ -47,6 +47,7 @@ async def create_project(
     headlineSwitch: int = Form(1),
     highlightSwitch: int = Form(0),
     removeSilenceSwitch: int = Form(0),
+    captionFont: str = Form("classic"),
 ):
     if file is None and not videoUrl:
         raise HTTPException(400, "Provide either a file upload or a videoUrl")
@@ -64,6 +65,7 @@ async def create_project(
         headlineSwitch=headlineSwitch,
         highlightSwitch=highlightSwitch,
         removeSilenceSwitch=removeSilenceSwitch,
+        captionFont=captionFont,
     )
 
     uploaded_path = None

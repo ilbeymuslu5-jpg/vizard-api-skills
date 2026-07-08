@@ -116,6 +116,7 @@ async def ai_social(req: AiSocialRequest):
     try:
         caption, hashtags = social.generate_social_post(
             clip["transcript"], platform=req.aiSocialPlatform, tone=req.tone, voice=req.voice,
+            language=clip.get("language"),
         )
     except ValueError as exc:
         raise HTTPException(400, str(exc))

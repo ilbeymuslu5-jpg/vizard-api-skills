@@ -113,7 +113,7 @@ def _run_pipeline(project_id: str, req: ProjectCreateRequest, uploaded_file: Pat
             _update(project_id, status="rendering", progress=progress,
                      message=f"Rendering clip {idx + 1}/{total}")
             video_id = f"{project_id}_{idx}"
-            video = _render_clip(pdir, video_id, source, clip, req)
+            video = _render_clip(pdir, video_id, source, clip, req, detected_lang)
             videos.append(video)
             with _lock:
                 _jobs[project_id]["videos"] = videos
@@ -128,7 +128,9 @@ def _run_pipeline(project_id: str, req: ProjectCreateRequest, uploaded_file: Pat
         _update(project_id, status="failed", progress=100, code=4002, message=f"Processing error: {exc}")
 
 
-def _render_clip(pdir: Path, video_id: str, source: Path, clip: ScoredClip, req: ProjectCreateRequest) -> dict:
+def _render_clip(
+    pdir: Path, video_id: str, source: Path, clip: ScoredClip, req: ProjectCreateRequest, language: str
+) -> dict:
     clips_dir = pdir / "clips"
     subs_dir = pdir / "subs"
     thumbs_dir = pdir / "thumbs"
@@ -175,6 +177,7 @@ def _render_clip(pdir: Path, video_id: str, source: Path, clip: ScoredClip, req:
         "endMs": int(clip.end * 1000),
         "videoUrl": f"/api/v1/project/files/{pdir.name}/clips/{video_id}.mp4",
         "thumbnailUrl": f"/api/v1/project/files/{pdir.name}/thumbs/{video_id}.jpg",
+        "language": language,
     }
 
 

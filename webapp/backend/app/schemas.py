@@ -38,6 +38,7 @@ class ClipOut(BaseModel):
     endMs: int
     videoUrl: str
     thumbnailUrl: str
+    language: str
 
 
 class ProjectStatusOut(BaseModel):

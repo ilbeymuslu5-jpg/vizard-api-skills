@@ -11,10 +11,13 @@ of a static crop.
 from __future__ import annotations
 
 import math
+import shutil
+import tempfile
 from pathlib import Path
 
 import cv2
 
+from . import ffmpeg_utils
 from .ffmpeg_utils import RATIO_TARGETS, cover_scale_dims, get_video_dimensions
 
 _FACE_CASCADE = cv2.CascadeClassifier(
@@ -55,22 +58,30 @@ def compute_pan_expr(source: Path, clip_start: float, clip_end: float, ratio: in
     segment_duration = max(MIN_SEGMENT_SECONDS, duration / MAX_KEYFRAMES)
     n_segments = max(1, math.ceil(duration / segment_duration))
 
-    cap = cv2.VideoCapture(str(source))
-    if not cap.isOpened():
-        return None
-
+    # Sample frames via ffmpeg rather than cv2.VideoCapture.set(POS_MSEC): on
+    # many real-world files (long GOPs, web-optimized encodes) OpenCV's own
+    # seek falls back to decoding forward from the last keyframe -- or from
+    # the start -- turning ~60 "seeks" into a multi-hour ordeal. ffmpeg's -ss
+    # seeking is a solved problem and each single-frame extraction is fast.
+    tmp_dir = Path(tempfile.mkdtemp(prefix="vizard_reframe_"))
     raw: list[float] = []
     try:
         for i in range(n_segments):
             t_mid = min(clip_start + (i + 0.5) * segment_duration, clip_end - 0.01)
-            cap.set(cv2.CAP_PROP_POS_MSEC, t_mid * 1000)
-            ok, frame = cap.read()
-            frac = _largest_face_center_frac(frame) if ok and frame is not None else None
+            frame_path = tmp_dir / f"f{i}.jpg"
+            frac = None
+            try:
+                ffmpeg_utils.make_thumbnail(source, frame_path, at_seconds=t_mid)
+                frame = cv2.imread(str(frame_path))
+                if frame is not None:
+                    frac = _largest_face_center_frac(frame)
+            except ffmpeg_utils.FFmpegError:
+                frac = None
             if frac is None:
                 frac = raw[-1] if raw else 0.5
             raw.append(frac)
     finally:
-        cap.release()
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
     if all(abs(f - 0.5) < 0.03 for f in raw):
         return None  # no meaningfully off-center subject detected; static crop is fine

@@ -4,6 +4,7 @@ no third-party clipping API is involved.
 """
 from __future__ import annotations
 
+import os
 import shutil
 import urllib.request
 from pathlib import Path
@@ -56,6 +57,13 @@ def _download_with_ytdlp(url: str, dest_dir: Path) -> Path:
         "no_warnings": True,
         "noprogress": True,
     }
+    # YouTube increasingly challenges datacenter/repeat-request IPs with a
+    # "confirm you're not a bot" wall. Borrowing cookies from a real, signed-in
+    # local browser session (yt-dlp's own recommended fix) works around it.
+    browser = os.environ.get("YTDLP_COOKIES_FROM_BROWSER", "chrome")
+    if browser:
+        opts["cookiesfrombrowser"] = (browser,)
+
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])

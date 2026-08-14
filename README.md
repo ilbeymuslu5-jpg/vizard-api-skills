@@ -39,6 +39,55 @@ The API follows an asynchronous processing pattern:
 
 - `SKILL.md`: High-level guide and prompt instructions for AI Agents.
 - `api-reference.md`: Detailed technical documentation including all endpoints, parameters, and status codes.
+- `skills/ui-ux-pro-max/`: Bundled UI/UX design intelligence skill (see below).
+
+## 🎨 Bundled Skill: UI/UX Pro Max
+
+`skills/ui-ux-pro-max/` adds an offline design-intelligence skill that pairs well with the video workflow above — use it to design the landing pages, dashboards, and player UIs that surround your generated clips.
+
+It ships a fully local, searchable catalog (no network calls, no API key):
+
+- 79 searchable UI styles (50 active), 192 product palettes with reasoning profiles
+- 74 Google Fonts pairings, 119 UX guidelines, 105 curated icons
+- 17 GSAP motion presets, 25 chart types, and 22 technology stacks (React, Vue, Svelte, Astro, Laravel, SwiftUI, Jetpack Compose, Flutter, React Native, WPF, JavaFX, and more)
+
+### Install
+
+Copy the skill folder into your agent's skills directory:
+
+```bash
+# Claude Code — project-local
+mkdir -p .claude/skills
+cp -R skills/ui-ux-pro-max .claude/skills/
+
+# Claude Code — global
+cp -R skills/ui-ux-pro-max ~/.claude/skills/
+```
+
+Cursor, Windsurf, and other agents use the same layout under their own root (`.cursor/`, `.windsurf/`, …).
+
+### Use
+
+Once installed the skill activates on its own for UI work. You can also drive the search engine directly:
+
+```bash
+# Generate a full design system for a product
+python3 skills/ui-ux-pro-max/scripts/search.py "beauty spa" --design-system -p "Serenity Spa"
+
+# Plain catalog search
+python3 skills/ui-ux-pro-max/scripts/search.py "dashboard"
+```
+
+**Requires Python 3.x** (standard library only). Verify the bundled data with `python3 skills/ui-ux-pro-max/scripts/validate_data.py`.
+
+### Attribution
+
+UI/UX Pro Max is vendored from [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) and is licensed MIT (© Next Level Builder). The upstream license is preserved at `skills/ui-ux-pro-max/LICENSE`. For updates, the marketplace or CLI install is the canonical path:
+
+```
+/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill
+/plugin install ui-ux-pro-max@ui-ux-pro-max-skill
+```
 
 ## 🚀 Quick Start (Example)
 
